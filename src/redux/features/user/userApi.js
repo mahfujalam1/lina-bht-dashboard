@@ -1,0 +1,118 @@
+import { baseApi } from "../../baseApi/baseApi";
+import { tagTypes } from "../../tagTypes";
+
+const userApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    getAllAdmin: builder.query({
+      query: (args) => {
+        console.log(args);
+        const params = new URLSearchParams();
+
+        if (args) {
+          args.forEach((item) => {
+            params.append(item.name, item.value);
+          });
+        }
+        return {
+          url: "/admin/all-users",
+          method: "GET",
+          params,
+        };
+      },
+    }),
+
+    getAllUsers: builder.query({
+      query: ({ page, limit }) => ({
+        url: `/users?page=${page}&limit=${limit}`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.users],
+    }),
+
+    getSingleUser: builder.query({
+      query: (id) => ({
+        url: `/users/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    udpateMyProfile: builder.mutation({
+      query: (data) => {
+        console.log("from apis", data);
+        return {
+          url: "/users",
+          method: "PATCH",
+          body: data,
+        };
+      },
+      invalidatesTags: [tagTypes.users],
+    }),
+
+    changePassword: builder.mutation({
+      query: (data) => ({
+        url: "/users/password",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [tagTypes.users],
+    }),
+
+    deleteUser: builder.mutation({
+      query: (id) => ({
+        url: `/users/delete-user/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.users],
+    }),
+
+    usersGrowth: builder.query({
+      query: (year) => ({
+        url: `/users/growth?year=${year}`,
+        method: "GET",
+      }),
+    }),
+    getEarningGrowth: builder.query({
+      query: (year) => ({
+        url: `/payments/growth?year=${year}`,
+        method: "GET",
+      }),
+    }),
+
+    forgotPassword: builder.mutation({
+      query: (email) => ({
+        url: "/users/forget-password",
+        method: "POST",
+        body: email,
+      }),
+    }),
+
+    verifyOTP: builder.mutation({
+      query: (data) => ({
+        url: "/users/verify-otp",
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    resetPassword: builder.mutation({
+      query: (data) => ({
+        url: "/users/reset-password",
+        method: "POST",
+        body: data,
+      }),
+    }),
+  }),
+});
+
+export const {
+  useGetAllAdminQuery,
+  useGetAllUsersQuery,
+  useUsersGrowthQuery,
+  useGetEarningGrowthQuery,
+  useDeleteUserMutation,
+  useUdpateMyProfileMutation,
+  useChangePasswordMutation,
+  useForgotPasswordMutation,
+  useVerifyOTPMutation,
+  useResetPasswordMutation,
+} = userApi;
