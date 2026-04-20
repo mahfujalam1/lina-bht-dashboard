@@ -15,8 +15,6 @@ export default function RemindersPage() {
     <div className="flex-1 min-h-screen">
       {contextHolder}
 
-      {/* hwllo */}
-
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
