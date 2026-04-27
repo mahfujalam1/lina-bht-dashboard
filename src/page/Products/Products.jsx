@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Table, Tag, Button, Input, Modal, Form, Select } from "antd";
-import { FaPlus, FaFilter, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaFilter, FaEdit, FaTrash, FaExclamationTriangle } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
 
 const initialProducts = [
@@ -46,31 +46,40 @@ const initialProducts = [
   },
 ];
 
-const typeColors = { Serum: "blue", Moisturizer: "purple", Toner: "cyan" };
+const typeColors = { Serum: "blue", Moisturizer: "purple", Toner: "cyan", Cleanser: "green", SPF: "orange" };
 
 export default function Products() {
   const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
 
-  const filtered = products.filter(
-    (p) =>
+  const filtered = products.filter((p) => {
+    const matchSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase()),
-  );
+      p.brand.toLowerCase().includes(search.toLowerCase());
+    const matchType = filterType === "All" || p.type === filterType;
+    const matchStatus = filterStatus === "All" || p.status === filterStatus;
+    return matchSearch && matchType && matchStatus;
+  });
 
   const handleAdd = () => {
     form.validateFields().then((vals) => {
       const newProduct = {
-        id: products.length + 1,
+        id: Date.now(),
         name: vals.name,
         brand: vals.brand,
         type: vals.type,
         ingredients: vals.ingredients
           ? vals.ingredients.split(",").map((i) => i.trim())
           : [],
-        status: "Active",
+        status: vals.status || "Active",
       };
       setProducts([...products, newProduct]);
       form.resetFields();
@@ -78,7 +87,46 @@ export default function Products() {
     });
   };
 
-  const handleDelete = (id) => setProducts(products.filter((p) => p.id !== id));
+  const handleEdit = (record) => {
+    setEditingProduct(record);
+    editForm.setFieldsValue({
+      name: record.name,
+      brand: record.brand,
+      type: record.type,
+      ingredients: record.ingredients.join(", "),
+      status: record.status,
+    });
+    setEditModal(true);
+  };
+
+  const handleUpdate = () => {
+    editForm.validateFields().then((vals) => {
+      setProducts(
+        products.map((p) =>
+          p.id === editingProduct.id
+            ? {
+                ...p,
+                name: vals.name,
+                brand: vals.brand,
+                type: vals.type,
+                ingredients: vals.ingredients
+                  ? vals.ingredients.split(",").map((i) => i.trim())
+                  : [],
+                status: vals.status || p.status,
+              }
+            : p
+        )
+      );
+      editForm.resetFields();
+      setEditModal(false);
+      setEditingProduct(null);
+    });
+  };
+
+  const handleDelete = (id) => {
+    setProducts(products.filter((p) => p.id !== id));
+    setDeleteConfirm(null);
+  };
 
   const columns = [
     {
@@ -138,9 +186,9 @@ export default function Products() {
     {
       title: <span className="text-xs text-[#9a8a77] font-medium">Status</span>,
       dataIndex: "status",
-      render: () => (
-        <Tag color="green" className="!rounded-full !text-xs">
-          Active
+      render: (status) => (
+        <Tag color={status === "Active" ? "green" : "red"} className="!rounded-full !text-xs">
+          {status}
         </Tag>
       ),
     },
@@ -150,11 +198,14 @@ export default function Products() {
       ),
       render: (_, row) => (
         <div className="flex gap-2">
-          <button className="text-[#9a8a77] hover:text-[#2d2416] transition-colors">
+          <button
+            onClick={() => handleEdit(row)}
+            className="text-[#9a8a77] hover:text-[#2d2416] transition-colors"
+          >
             <FaEdit size={15} />
           </button>
           <button
-            onClick={() => handleDelete(row.id)}
+            onClick={() => setDeleteConfirm(row)}
             className="text-[#9a8a77] hover:text-red-500 transition-colors"
           >
             <FaTrash size={15} />
@@ -186,20 +237,37 @@ export default function Products() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 p-4 border-b border-[#f0ebe4]">
+        <div className="flex items-center gap-3 p-4 border-b border-[#f0ebe4] flex-wrap">
           <Input
             placeholder="Search products by name, brand, or ingredient..."
             prefix={<FiSearch className="text-[#9a8a77]" />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 !bg-[#f5f0eb] !border-none !rounded-xl"
+            className="flex-1 !bg-[#f5f0eb] !border-none !rounded-xl min-w-[200px]"
           />
-          <Button
-            icon={<FaFilter />}
-            className="flex items-center gap-2 !bg-[#f5f0eb] !border-none !rounded-xl !text-[#5c4a32]"
-          >
-            Filter
-          </Button>
+          <Select
+            value={filterType}
+            onChange={setFilterType}
+            className="w-36"
+            options={[
+              { value: "All", label: "All Types" },
+              { value: "Serum", label: "Serum" },
+              { value: "Moisturizer", label: "Moisturizer" },
+              { value: "Toner", label: "Toner" },
+              { value: "Cleanser", label: "Cleanser" },
+              { value: "SPF", label: "SPF" },
+            ]}
+          />
+          <Select
+            value={filterStatus}
+            onChange={setFilterStatus}
+            className="w-36"
+            options={[
+              { value: "All", label: "All Status" },
+              { value: "Active", label: "Active" },
+              { value: "Inactive", label: "Inactive" },
+            ]}
+          />
         </div>
 
         <Table
@@ -215,6 +283,7 @@ export default function Products() {
         />
       </div>
 
+      {/* Add Product Modal */}
       <Modal
         title={
           <span className="text-[#2d2416] font-semibold">Add New Product</span>
@@ -264,6 +333,108 @@ export default function Products() {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Edit/Update Product Modal */}
+      <Modal
+        title={
+          <span className="text-[#2d2416] font-semibold">Update Product</span>
+        }
+        open={editModal}
+        onCancel={() => {
+          setEditModal(false);
+          editForm.resetFields();
+          setEditingProduct(null);
+        }}
+        onOk={handleUpdate}
+        okText="Update Product"
+        okButtonProps={{
+          className: "!bg-[#2d2416] !border-[#2d2416] !rounded-xl",
+        }}
+        cancelButtonProps={{
+          className:
+            "!rounded-xl !bg-[#f5f0eb] !border-[#f5f0eb] !text-[#5c4a32]",
+        }}
+        className="waxi-modal"
+      >
+        <Form form={editForm} layout="vertical" className="mt-4">
+          <Form.Item
+            name="name"
+            label="Product Name"
+            rules={[{ required: true }]}
+          >
+            <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
+          </Form.Item>
+          <Form.Item name="brand" label="Brand" rules={[{ required: true }]}>
+            <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
+          </Form.Item>
+          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+            <Select
+              className="w-full"
+              options={["Serum", "Moisturizer", "Toner", "Cleanser", "SPF"].map(
+                (v) => ({ value: v, label: v }),
+              )}
+            />
+          </Form.Item>
+          <Form.Item
+            name="ingredients"
+            label="Key Ingredients (comma separated)"
+          >
+            <Input
+              className="!rounded-xl !bg-[#f5f0eb] !border-none"
+              placeholder="e.g. Niacinamide, Ceramides"
+            />
+          </Form.Item>
+          <Form.Item name="status" label="Status">
+            <Select
+              className="w-full"
+              options={[
+                { value: "Active", label: "Active" },
+                { value: "Inactive", label: "Inactive" },
+              ]}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={!!deleteConfirm}
+        onCancel={() => setDeleteConfirm(null)}
+        footer={null}
+        closable={false}
+        centered
+        width={400}
+      >
+        <div className="flex flex-col items-center py-4">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+            <FaExclamationTriangle size={24} className="text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#2d2416] mb-1">
+            Delete Product?
+          </h3>
+          <p className="text-sm text-[#9a8a77] text-center mb-5">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-[#2d2416]">
+              "{deleteConfirm?.name}"
+            </span>
+            ? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="flex-1 py-2.5 rounded-xl bg-[#f5f0eb] text-[#5c4a32] font-medium text-sm hover:bg-[#e8e0d8] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleDelete(deleteConfirm.id)}
+              className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition-colors"
+            >
+              Yes, Delete
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

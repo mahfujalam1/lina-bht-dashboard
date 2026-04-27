@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button, Select, Modal, Form, Input, Tag } from "antd";
-import { FaEdit, FaTrash, FaEye, FaPlus, FaVideo } from "react-icons/fa";
+import { Button, Select, Modal, Form, Input, Tag, Upload, message } from "antd";
+import { FaEdit, FaTrash, FaEye, FaPlus, FaVideo, FaCloudUploadAlt, FaExclamationTriangle } from "react-icons/fa";
 
 const categories = [
   { name: "Skin Health", count: 42 },
@@ -56,17 +56,21 @@ export default function EducationalContent() {
   const [articleModal, setArticleModal] = useState(false);
   const [videoModal, setVideoModal] = useState(false);
   const [addCatModal, setAddCatModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [catList, setCatList] = useState(categories);
   const [articleForm] = Form.useForm();
   const [videoForm] = Form.useForm();
   const [catForm] = Form.useForm();
+  const [editForm] = Form.useForm();
 
   const handlePublishArticle = () => {
     articleForm.validateFields().then((vals) => {
       setContent([
         ...content,
         {
-          id: content.length + 1,
+          id: Date.now(),
           type: "article",
           ...vals,
           published: "Today",
@@ -84,7 +88,7 @@ export default function EducationalContent() {
       setContent([
         ...content,
         {
-          id: content.length + 1,
+          id: Date.now(),
           type: "video",
           ...vals,
           published: "Today",
@@ -103,6 +107,35 @@ export default function EducationalContent() {
       catForm.resetFields();
       setAddCatModal(false);
     });
+  };
+
+  const handleEditClick = (item) => {
+    setEditingItem(item);
+    editForm.setFieldsValue({
+      title: item.title,
+      category: item.category,
+      readTime: item.readTime,
+      rating: item.rating,
+    });
+    setEditModal(true);
+  };
+
+  const handleUpdateContent = () => {
+    editForm.validateFields().then((vals) => {
+      setContent(
+        content.map((c) =>
+          c.id === editingItem.id ? { ...c, ...vals } : c
+        )
+      );
+      editForm.resetFields();
+      setEditModal(false);
+      setEditingItem(null);
+    });
+  };
+
+  const handleDelete = (id) => {
+    setContent(content.filter((c) => c.id !== id));
+    setDeleteConfirm(null);
   };
 
   return (
@@ -184,13 +217,14 @@ export default function EducationalContent() {
                   </p>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                  <button className="text-[#9a8a77] hover:text-[#2d2416] transition-colors">
+                  <button
+                    onClick={() => handleEditClick(item)}
+                    className="text-[#9a8a77] hover:text-[#2d2416] transition-colors"
+                  >
                     <FaEdit size={14} />
                   </button>
                   <button
-                    onClick={() =>
-                      setContent(content.filter((c) => c.id !== item.id))
-                    }
+                    onClick={() => setDeleteConfirm(item)}
                     className="text-[#9a8a77] hover:text-red-500 transition-colors"
                   >
                     <FaTrash size={14} />
@@ -373,17 +407,42 @@ export default function EducationalContent() {
             />
           </Form.Item>
           <Form.Item
-            name="thumbnailUrl"
+            name="videoFile"
             label={
               <span className="text-sm font-medium text-[#5c4a32]">
-                Thumbnail URL
+                Upload Video File <span className="text-red-400">*</span>
               </span>
             }
+            rules={[{ required: true, message: "Please upload a video file" }]}
+            valuePropName="fileList"
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) return e;
+              return e?.fileList;
+            }}
           >
-            <Input
-              placeholder="https://..."
-              className="!rounded-xl !bg-[#f5f0eb] !border-none"
-            />
+            <Upload.Dragger
+              accept="video/*"
+              maxCount={1}
+              beforeUpload={(file) => {
+                const isVideo = file.type.startsWith("video/");
+                if (!isVideo) {
+                  message.error("Only video files are allowed!");
+                }
+                return false;
+              }}
+              className="!rounded-xl !bg-[#f5f0eb] !border-[#e3d9cc] hover:!border-[#c8a96e]"
+              style={{ width: "100%" }}
+            >
+              <div className="flex flex-col items-center py-4">
+                <FaCloudUploadAlt size={36} className="text-[#9a8a77] mb-2" />
+                <p className="text-sm font-medium text-[#2d2416]">
+                  Click or drag video file here
+                </p>
+                <p className="text-xs text-[#9a8a77] mt-1">
+                  Supports MP4, MOV, AVI, WebM
+                </p>
+              </div>
+            </Upload.Dragger>
           </Form.Item>
           <Form.Item
             name="rating"
@@ -400,6 +459,123 @@ export default function EducationalContent() {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Edit/Update Content Modal */}
+      <Modal
+        title={
+          <span className="text-[#2d2416] font-semibold">
+            Update {editingItem?.type === "video" ? "Video" : "Article"}
+          </span>
+        }
+        open={editModal}
+        onCancel={() => {
+          setEditModal(false);
+          editForm.resetFields();
+          setEditingItem(null);
+        }}
+        onOk={handleUpdateContent}
+        okText="Update"
+        okButtonProps={{
+          className: "!bg-[#2d2416] !border-[#2d2416] !rounded-xl",
+        }}
+        cancelButtonProps={{
+          className:
+            "!rounded-xl !bg-[#f5f0eb] !border-[#f5f0eb] !text-[#5c4a32]",
+        }}
+      >
+        <Form form={editForm} layout="vertical" className="mt-4">
+          <Form.Item
+            name="title"
+            label={
+              <span className="text-sm font-medium text-[#5c4a32]">
+                Title <span className="text-red-400">*</span>
+              </span>
+            }
+            rules={[{ required: true }]}
+          >
+            <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
+          </Form.Item>
+          <Form.Item
+            name="category"
+            label={
+              <span className="text-sm font-medium text-[#5c4a32]">
+                Category <span className="text-red-400">*</span>
+              </span>
+            }
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={catList.map((c) => ({ value: c.name, label: c.name }))}
+              className="w-full"
+            />
+          </Form.Item>
+          <Form.Item
+            name="readTime"
+            label={
+              <span className="text-sm font-medium text-[#5c4a32]">
+                {editingItem?.type === "video" ? "Duration" : "Read Time"}{" "}
+                <span className="text-red-400">*</span>
+              </span>
+            }
+            rules={[{ required: true }]}
+          >
+            <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
+          </Form.Item>
+          <Form.Item
+            name="rating"
+            label={
+              <span className="text-sm font-medium text-[#5c4a32]">
+                Content Summary
+              </span>
+            }
+          >
+            <Input.TextArea
+              rows={3}
+              className="!rounded-xl !bg-[#f5f0eb] !border-none"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={!!deleteConfirm}
+        onCancel={() => setDeleteConfirm(null)}
+        footer={null}
+        closable={false}
+        centered
+        width={400}
+      >
+        <div className="flex flex-col items-center py-4">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+            <FaExclamationTriangle size={24} className="text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#2d2416] mb-1">
+            Delete {deleteConfirm?.type === "video" ? "Video" : "Article"}?
+          </h3>
+          <p className="text-sm text-[#9a8a77] text-center mb-5">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-[#2d2416]">
+              "{deleteConfirm?.title}"
+            </span>
+            ? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="flex-1 py-2.5 rounded-xl bg-[#f5f0eb] text-[#5c4a32] font-medium text-sm hover:bg-[#e8e0d8] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleDelete(deleteConfirm.id)}
+              className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition-colors"
+            >
+              Yes, Delete
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* Add Category Modal */}
