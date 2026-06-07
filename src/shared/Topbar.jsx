@@ -1,52 +1,24 @@
 import { useState, useRef, useEffect } from "react";
-import { Badge, Avatar } from "antd";
+import { Badge, Avatar, Spin } from "antd";
 import { FaBell, FaCheckDouble, FaCheck } from "react-icons/fa";
 import { HiMenuAlt2 } from "react-icons/hi";
-
-const initialNotifications = [
-  {
-    id: 1,
-    title: "New User Registered",
-    message: "Sarah Johnson just created an account.",
-    time: "2 min ago",
-    read: false,
-  },
-  {
-    id: 2,
-    title: "Subscription Upgraded",
-    message: "User #4821 upgraded to Premium plan.",
-    time: "18 min ago",
-    read: false,
-  },
-  {
-    id: 3,
-    title: "New Video Published",
-    message: '"Facial Massage Techniques" is now live.',
-    time: "1 hr ago",
-    read: false,
-  },
-  {
-    id: 4,
-    title: "AI Config Updated",
-    message: "Skin analysis model v2.4 deployed.",
-    time: "3 hrs ago",
-    read: true,
-  },
-  {
-    id: 5,
-    title: "Weekly Report Ready",
-    message: "Analytics report for this week is available.",
-    time: "5 hrs ago",
-    read: true,
-  },
-];
+import { useMeQuery } from "../redux/features/auth/authApi";
+import { useGetNotificationHistoryQuery } from "../redux/features/notification/notificationApi";
 
 export default function Topbar({ onToggleSidebar }) {
-  const [notifications, setNotifications] = useState(initialNotifications);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [readIds, setReadIds] = useState(new Set());
   const dropdownRef = useRef(null);
+  const { data: meData } = useMeQuery();
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const { data: historyData, isLoading: isHistoryLoading } = useGetNotificationHistoryQuery(
+    { limit: 20, offset: 0, unread_only: false },
+    { skip: !dropdownOpen }
+  );
+
+  const notifications = historyData?.notifications || historyData?.items || [];
+
+  const unreadCount = notifications.filter((n) => !n.is_read && !readIds.has(n._id || n.id)).length;
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -62,13 +34,23 @@ export default function Topbar({ onToggleSidebar }) {
   }, [dropdownOpen]);
 
   const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setReadIds((prev) => new Set([...prev, id]));
   };
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const allIds = notifications.map((n) => n._id || n.id);
+    setReadIds(new Set(allIds));
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hr${hrs > 1 ? "s" : ""} ago`;
+    return `${Math.floor(hrs / 24)} day${Math.floor(hrs / 24) > 1 ? "s" : ""} ago`;
   };
 
   return (
@@ -82,7 +64,7 @@ export default function Topbar({ onToggleSidebar }) {
         <HiMenuAlt2 size={24} />
       </button>
 
-      {/* Spacer for desktop (pushes right content to end) */}
+      {/* Spacer for desktop */}
       <div className="hidden lg:block" />
 
       {/* Right side */}
@@ -102,9 +84,7 @@ export default function Topbar({ onToggleSidebar }) {
           {dropdownOpen && (
             <div
               className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white rounded-2xl shadow-xl border border-[#f0ebe4] z-50 overflow-hidden"
-              style={{
-                animation: "notifSlideIn 0.2s ease-out",
-              }}
+              style={{ animation: "notifSlideIn 0.2s ease-out" }}
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0ebe4]">
@@ -124,57 +104,62 @@ export default function Topbar({ onToggleSidebar }) {
 
               {/* Notification list */}
               <div className="max-h-72 overflow-y-auto">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`flex items-start gap-3 px-4 py-3 transition-colors cursor-default
-                      ${
-                        notif.read
-                          ? "bg-white"
-                          : "bg-[#fdf8f2] hover:bg-[#f9f1e7]"
-                      }
-                      border-b border-[#f5f0eb] last:border-b-0`}
-                  >
-                    {/* Unread dot */}
-                    <div className="mt-1.5 flex-shrink-0">
-                      {!notif.read ? (
-                        <span className="block w-2 h-2 rounded-full bg-[#c97d2a]" />
-                      ) : (
-                        <span className="block w-2 h-2 rounded-full bg-transparent" />
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm leading-snug ${
-                          notif.read
-                            ? "text-[#7a6a57] font-normal"
-                            : "text-[#2d2416] font-semibold"
-                        }`}
-                      >
-                        {notif.title}
-                      </p>
-                      <p className="text-xs text-[#9a8a77] mt-0.5 truncate">
-                        {notif.message}
-                      </p>
-                      <p className="text-[10px] text-[#b8a994] mt-1">
-                        {notif.time}
-                      </p>
-                    </div>
-
-                    {/* Mark as read button */}
-                    {!notif.read && (
-                      <button
-                        onClick={() => markAsRead(notif.id)}
-                        className="flex-shrink-0 mt-1 w-6 h-6 rounded-full flex items-center justify-center text-[#9a8a77] hover:text-[#8b6914] hover:bg-[#f0ebe4] transition-colors"
-                        title="Mark as read"
-                      >
-                        <FaCheck size={10} />
-                      </button>
-                    )}
+                {isHistoryLoading ? (
+                  <div className="flex justify-center items-center h-24">
+                    <Spin size="small" />
                   </div>
-                ))}
+                ) : notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-24 text-[#9a8a77]">
+                    <FaBell size={20} className="mb-2 opacity-30" />
+                    <p className="text-xs">No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.map((notif) => {
+                    const notifId = notif._id || notif.id;
+                    const isRead = notif.is_read || readIds.has(notifId);
+                    return (
+                      <div
+                        key={notifId}
+                        className={`flex items-start gap-3 px-4 py-3 transition-colors cursor-default
+                          ${isRead ? "bg-white" : "bg-[#fdf8f2] hover:bg-[#f9f1e7]"}
+                          border-b border-[#f5f0eb] last:border-b-0`}
+                      >
+                        {/* Unread dot */}
+                        <div className="mt-1.5 flex-shrink-0">
+                          {!isRead ? (
+                            <span className="block w-2 h-2 rounded-full bg-[#c97d2a]" />
+                          ) : (
+                            <span className="block w-2 h-2 rounded-full bg-transparent" />
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm leading-snug ${isRead ? "text-[#7a6a57] font-normal" : "text-[#2d2416] font-semibold"}`}>
+                            {notif.title || notif.trigger || "Notification"}
+                          </p>
+                          <p className="text-xs text-[#9a8a77] mt-0.5 truncate">
+                            {notif.message || notif.body || notif.trigger || ""}
+                          </p>
+                          <p className="text-[10px] text-[#b8a994] mt-1">
+                            {formatTime(notif.created_at || notif.sent_at)}
+                          </p>
+                        </div>
+
+                        {/* Mark as read button */}
+                        {!isRead && (
+                          <button
+                            onClick={() => markAsRead(notifId)}
+                            className="flex-shrink-0 mt-1 w-6 h-6 rounded-full flex items-center justify-center text-[#9a8a77] hover:text-[#8b6914] hover:bg-[#f0ebe4] transition-colors"
+                            title="Mark as read"
+                          >
+                            <FaCheck size={10} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* Footer */}
@@ -191,9 +176,9 @@ export default function Topbar({ onToggleSidebar }) {
         <div className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-sm font-semibold text-[#2d2416] leading-tight">
-              System Admin
+              {meData?.admin?.full_name}
             </p>
-            <p className="text-xs text-[#9a8a77]">Super User</p>
+            <p className="text-xs text-[#9a8a77]">{meData?.admin?.email}</p>
           </div>
           <Avatar
             style={{ backgroundColor: "#8b9e7a", color: "#fff", fontWeight: 600 }}

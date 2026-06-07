@@ -1,41 +1,7 @@
-import { useState } from "react";
 import { Button } from "antd";
 import { FiBell, FiPlus } from "react-icons/fi";
 import ReminderItem from "./ReminderItem";
-
-const initialReminders = [
-  {
-    id: 1,
-    label: "Morning Routine",
-    tag: "routine",
-    defaultTime: "08:00 AM",
-    enabled: true,
-  },
-  {
-    id: 2,
-    label: "Night Routine",
-    tag: "routine",
-    defaultTime: "09:00 PM",
-    enabled: true,
-  },
-  {
-    id: 3,
-    label: "Weekly Scan Reminder",
-    tag: "scan",
-    defaultTime: "Sunday 10:00 AM",
-    enabled: true,
-  },
-  {
-    id: 4,
-    label: "Stress Check-in",
-    tag: "wellness",
-    defaultTime: "Friday 05:00 PM",
-    enabled: false,
-  },
-];
-
-export default function DefaultReminders() {
-  const [reminders, setReminders] = useState(initialReminders);
+export default function DefaultReminders({ reminders, setReminders }) {
 
   const handleToggle = (id, val) => {
     setReminders((prev) =>

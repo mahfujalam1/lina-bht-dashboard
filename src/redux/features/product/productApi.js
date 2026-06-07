@@ -5,9 +5,8 @@ const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     addProduct: builder.mutation({
       query: (formdata) => {
-        console.log("product data from apis file=>", formdata);
         return {
-          url: "/products",
+          url: "/admin/product",
           method: "POST",
           body: formdata,
         };
@@ -16,10 +15,16 @@ const productApi = baseApi.injectEndpoints({
     }),
 
     getAllProducts: builder.query({
-      query: ({ category, query, page, limit }) => {
-        console.log({ category, query, page, limit });
+      query: ({ search = "", condition = "", category = "", limit = 50, offset = 0 }) => {
+        const queryParams = new URLSearchParams();
+        if (search) queryParams.append("search", search);
+        if (condition && condition !== "All") queryParams.append("condition", condition);
+        if (category && category !== "All") queryParams.append("category", category);
+        queryParams.append("limit", limit);
+        queryParams.append("offset", offset);
+
         return {
-          url: `/products/all?category=${category}&query=${query}&page=${page}&limit=${limit}`,
+          url: `/admin/product?${queryParams.toString()}`,
           method: "GET",
         };
       },
@@ -28,7 +33,7 @@ const productApi = baseApi.injectEndpoints({
 
     getProductById: builder.query({
       query: (id) => ({
-        url: `/products/${id}`,
+        url: `/admin/product/${id}`,
         method: "GET",
       }),
       providesTags: [tagTypes.products],
@@ -36,11 +41,10 @@ const productApi = baseApi.injectEndpoints({
 
     updateProduct: builder.mutation({
       query: ({ id, formdata }) => {
-        console.log("formData from api =>", formdata); // This is just for debugging; remove it in production.
         return {
-          url: `/products/${id}`,
-          method: "PATCH",
-          body: formdata, // Ensure that formdata is passed correctly as FormData
+          url: `/admin/product/${id}`,
+          method: "PUT",
+          body: formdata,
         };
       },
       invalidatesTags: [tagTypes.products],
@@ -48,7 +52,7 @@ const productApi = baseApi.injectEndpoints({
 
     deleteProduct: builder.mutation({
       query: (id) => ({
-        url: `/products/${id}`,
+        url: `/admin/product/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [tagTypes.products],

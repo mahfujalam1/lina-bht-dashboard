@@ -3,21 +3,9 @@ import { tagTypes } from "../../tagTypes";
 
 const termAndPolicy = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // addProduct: builder.mutation({
-    //   query: (formdata) => {
-    //     console.log("product data from apis file=>", formdata);
-    //     return {
-    //       url: "/products",
-    //       method: "POST",
-    //       body: formdata,
-    //     };
-    //   },
-    //   invalidatesTags: [tagTypes.products],
-    // }),
-
-    getPolicy: builder.query({
+    getPrivacy: builder.query({
       query: () => ({
-        url: `/policies/policy`,
+        url: `/legal/privacy`,
         method: "GET",
       }),
       providesTags: [tagTypes.policy],
@@ -25,25 +13,35 @@ const termAndPolicy = baseApi.injectEndpoints({
 
     getTerms: builder.query({
       query: () => ({
-        url: `/policies/terms`,
+        url: `/legal/terms`,
         method: "GET",
       }),
       providesTags: [tagTypes.terms],
     }),
 
-    updatePolicy: builder.mutation({
-      query: (content) => {
-        console.log("formData from api =>", content);
-        return {
-          url: `/policies`,
-          method: "PATCH",
-          body: content,
-        };
-      },
-      invalidatesTags: [tagTypes.terms, tagTypes.policy],
+    updatePrivacy: builder.mutation({
+      query: (data) => ({
+        url: `/admin/legal/privacy`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: [tagTypes.policy],
+    }),
+
+    updateTerms: builder.mutation({
+      query: (data) => ({
+        url: `/admin/legal/terms`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: [tagTypes.terms],
     }),
   }),
 });
 
-export const { useGetPolicyQuery, useGetTermsQuery, useUpdatePolicyMutation } =
-  termAndPolicy;
+export const {
+  useGetPrivacyQuery,
+  useGetTermsQuery,
+  useUpdatePrivacyMutation,
+  useUpdateTermsMutation,
+} = termAndPolicy;

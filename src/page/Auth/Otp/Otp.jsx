@@ -1,15 +1,15 @@
 import React, { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useVerifyOTPMutation } from "../../../redux/features/user/userApi";
 import { toast } from "sonner";
 import AuthHeader from "../../../shared/AuthHeader";
+import { useVerifyOtpMutation } from "../../../redux/features/auth/authApi";
 
 const OtpVerify = () => {
   const { email } = useParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
-  const [verfyOTP] = useVerifyOTPMutation();
+  const [verfyOTP] = useVerifyOtpMutation();
 
   // handle otp input
   const handleChange = (value, index) => {
@@ -34,11 +34,14 @@ const OtpVerify = () => {
 
   const handleVerify = async (e) => {
     e.preventDefault();
-    const forgotToken = localStorage.getItem("forgot-token");
+    const email = localStorage.getItem("email");
     const code = otp.join("");
     if (code.length === 6) {
-      const res = verfyOTP({ token: forgotToken, code: code });
-      console.log(res)
+      const res = verfyOTP({ email: email, otp: code });
+      if (res.success) {
+        localStorage.setItem("forgot-token", res?.data?.data?.token)
+      }
+      localStorage.setItem('otp', code)
       navigate(`/auth/new-password/${encodeURIComponent(email)}`);
     } else {
       toast.warning("Please enter all 6 digits!");

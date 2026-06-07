@@ -48,14 +48,6 @@ const userApi = baseApi.injectEndpoints({
       invalidatesTags: [tagTypes.users],
     }),
 
-    changePassword: builder.mutation({
-      query: (data) => ({
-        url: "/users/password",
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: [tagTypes.users],
-    }),
 
     deleteUser: builder.mutation({
       query: (id) => ({
@@ -78,29 +70,6 @@ const userApi = baseApi.injectEndpoints({
       }),
     }),
 
-    forgotPassword: builder.mutation({
-      query: (email) => ({
-        url: "/users/forget-password",
-        method: "POST",
-        body: email,
-      }),
-    }),
-
-    verifyOTP: builder.mutation({
-      query: (data) => ({
-        url: "/users/verify-otp",
-        method: "POST",
-        body: data,
-      }),
-    }),
-
-    resetPassword: builder.mutation({
-      query: (data) => ({
-        url: "/users/reset-password",
-        method: "POST",
-        body: data,
-      }),
-    }),
   }),
 });
 
@@ -111,8 +80,4 @@ export const {
   useGetEarningGrowthQuery,
   useDeleteUserMutation,
   useUdpateMyProfileMutation,
-  useChangePasswordMutation,
-  useForgotPasswordMutation,
-  useVerifyOTPMutation,
-  useResetPasswordMutation,
 } = userApi;

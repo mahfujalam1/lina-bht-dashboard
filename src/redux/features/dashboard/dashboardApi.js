@@ -22,7 +22,13 @@ const dashboardApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+    overview: builder.query({
+      query: () => ({
+        url: `/admin/home/overview`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
-export const { useGetDashboardStatusQuery, useGetIncomeRatioQuery, useGetNewOrderQuery } = dashboardApi;
+export const { useGetDashboardStatusQuery, useGetIncomeRatioQuery, useGetNewOrderQuery, useOverviewQuery } = dashboardApi;

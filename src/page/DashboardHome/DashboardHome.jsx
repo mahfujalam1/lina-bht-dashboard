@@ -9,39 +9,45 @@ import {
 import { FiUsers, FiCreditCard, FiTrendingUp } from "react-icons/fi";
 import { MdOutlineFaceRetouchingNatural } from "react-icons/md";
 import StatCard from "../../component/Main/Dashboard/StatCard";
+import { useOverviewQuery } from "../../redux/features/dashboard/dashboardApi";
 
-const weeklyData = [
-  { day: "Mon", scans: 380, users: 240 },
-  { day: "Tue", scans: 280, users: 130 },
-  { day: "Wed", scans: 220, users: 1000 },
-  { day: "Thu", scans: 300, users: 420 },
-  { day: "Fri", scans: 180, users: 480 },
-  { day: "Sat", scans: 250, users: 380 },
-  { day: "Sun", scans: 350, users: 420 },
-];
+// Fetch overview data
 
-const alerts = [
-  {
-    dot: "bg-blue-500",
-    title: "New Product Added",
-    desc: "Ceramide Barrier Cream pending AI sync.",
-    time: "2h ago",
-  },
-  {
-    dot: "bg-amber-500",
-    title: "High Server Load",
-    desc: "Scan API experiencing high traffic.",
-    time: "5h ago",
-  },
-  {
-    dot: "bg-green-500",
-    title: "Subscription Milestone",
-    desc: "Crossed 3,800 active premium users.",
-    time: "1d ago",
-  },
-];
 
 export default function Dashboard() {
+  // Fetch overview data
+  const { data, isLoading, error } = useOverviewQuery();
+
+  const weeklyData = data?.weekly_activity?.map(item => ({
+    day: item.label,
+    scans: item.scans,
+    users: item.signups,
+  })) || [];
+
+  const alerts = data?.recent_alerts?.map(alert => ({
+    dot:
+      alert.type === "info"
+        ? "bg-blue-500"
+        : alert.type === "warning"
+        ? "bg-amber-500"
+        : alert.type === "success"
+        ? "bg-green-500"
+        : "bg-gray-500",
+    title: alert.title,
+    desc: alert.description,
+    time: alert.time,
+  })) || [];
+
+  const metrics = data?.metrics || {
+    total_users: { value: 0, change: "" },
+    active_scans: { value: 0, change: "" },
+    premium_subs: { value: 0, change: "" },
+    revenue: { value: "$0", change: "" },
+  };
+
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><span className="text-gray-500">Loading dashboard...</span></div>;
+  if (error) return <div className="flex items-center justify-center min-h-screen"><span className="text-red-500">Failed to load dashboard data.</span></div>;
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-[#2d2416] mb-1">
@@ -56,26 +62,26 @@ export default function Dashboard() {
         <StatCard
           icon={<FiUsers />}
           label="Total Users"
-          value="12,450"
-          growth="+12%"
+          value={metrics.total_users.value}
+          growth={metrics.total_users.change}
         />
         <StatCard
           icon={<MdOutlineFaceRetouchingNatural />}
           label="Active Scans"
-          value="45,900"
-          growth="+24%"
+          value={metrics.active_scans.value}
+          growth={metrics.active_scans.change}
         />
         <StatCard
           icon={<FiCreditCard />}
           label="Premium Subs"
-          value="3,820"
-          growth="+8%"
+          value={metrics.premium_subs.value}
+          growth={metrics.premium_subs.change}
         />
         <StatCard
           icon={<FiTrendingUp />}
           label="Revenue (MRR)"
-          value="$114.6k"
-          growth="+15%"
+          value={metrics.revenue.value}
+          growth={metrics.revenue.change}
         />
       </div>
 

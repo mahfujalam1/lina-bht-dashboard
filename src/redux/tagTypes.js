@@ -12,6 +12,12 @@ export const tagTypes = {
   dashboard: "Dashboard",
   policy: "policy",
   terms: "terms",
+  subscriptions: "Subscriptions",
+  articles: "Articles",
+  analytics: "Analytics",
+  aiConfig: "AiConfig",
+  notification: "Notification",
+  notificationHistory: "NotificationHistory",
 };
 
 export const tagTypesList = [
@@ -21,10 +27,17 @@ export const tagTypesList = [
   tagTypes.products,
   tagTypes.messages,
   tagTypes.templates,
+  tagTypes.payments,
   tagTypes.news,
   tagTypes.orders,
   tagTypes.chat,
   tagTypes.dashboard,
   tagTypes.policy,
   tagTypes.terms,
+  tagTypes.subscriptions,
+  tagTypes.articles,
+  tagTypes.analytics,
+  tagTypes.aiConfig,
+  tagTypes.notification,
+  tagTypes.notificationHistory,
 ];

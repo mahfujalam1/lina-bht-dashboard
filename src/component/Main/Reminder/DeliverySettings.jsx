@@ -1,17 +1,16 @@
-import { useState } from "react";
 import { Switch, Select } from "antd";
 
 const timezoneOptions = [
-  { value: "local", label: "User's Local Time" },
+  { value: "user_local_time", label: "User's Local Time" },
   { value: "utc", label: "UTC" },
   { value: "est", label: "Eastern Time (EST)" },
   { value: "pst", label: "Pacific Time (PST)" },
-  { value: "gmt", label: "GMT+0" },
+  { value: "cst", label: "Central Time (CST)" },
+  { value: "mst", label: "Mountain Time (MST)" },
 ];
 
-export default function DeliverySettings() {
-  const [smartTiming, setSmartTiming] = useState(true);
-  const [timezone, setTimezone] = useState("local");
+export default function DeliverySettings({ deliverySettings, setDeliverySettings }) {
+  const { smart_timing, timezone_handling } = deliverySettings;
 
   return (
     <div className="bg-white rounded-2xl border border-[#ede6db] p-6 shadow-sm">
@@ -30,9 +29,9 @@ export default function DeliverySettings() {
           AI adjusts delivery time based on user's past engagement.
         </p>
         <Switch
-          checked={smartTiming}
-          onChange={setSmartTiming}
-          style={{ backgroundColor: smartTiming ? "#8b6914" : "#d4c9bb" }}
+          checked={smart_timing}
+          onChange={(val) => setDeliverySettings((prev) => ({ ...prev, smart_timing: val }))}
+          style={{ backgroundColor: smart_timing ? "#8b6914" : "#d4c9bb" }}
         />
       </div>
 
@@ -42,8 +41,8 @@ export default function DeliverySettings() {
           Timezone Handling
         </label>
         <Select
-          value={timezone}
-          onChange={setTimezone}
+          value={timezone_handling}
+          onChange={(val) => setDeliverySettings((prev) => ({ ...prev, timezone_handling: val }))}
           options={timezoneOptions}
           className="w-full"
           style={{ height: 40 }}

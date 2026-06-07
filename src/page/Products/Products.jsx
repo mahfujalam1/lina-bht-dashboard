@@ -1,55 +1,17 @@
 import { useState } from "react";
-import { Table, Tag, Button, Input, Modal, Form, Select } from "antd";
-import { FaPlus, FaFilter, FaEdit, FaTrash, FaExclamationTriangle } from "react-icons/fa";
+import { Table, Tag, Button, Input, Modal, Form, Select, Upload, message } from "antd";
+import { FaPlus, FaEdit, FaTrash, FaExclamationTriangle } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
-
-const initialProducts = [
-  {
-    id: 1,
-    name: "Calm & Restore Serum",
-    brand: "Waxi Essentials",
-    type: "Serum",
-    ingredients: ["Centella Asia", "Niacinamide"],
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Barrier Repair Cream",
-    brand: "Waxi Essentials",
-    type: "Moisturizer",
-    ingredients: ["Ceramides", "Squalene"],
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Hydrating Toner 1",
-    brand: "Waxi Essentials",
-    type: "Toner",
-    ingredients: ["Glycerin"],
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Hydrating Toner 2",
-    brand: "Waxi Essentials",
-    type: "Toner",
-    ingredients: ["Glycerin"],
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Hydrating Toner 3",
-    brand: "Waxi Essentials",
-    type: "Toner",
-    ingredients: ["Glycerin"],
-    status: "Active",
-  },
-];
-
-const typeColors = { Serum: "blue", Moisturizer: "purple", Toner: "cyan", Cleanser: "green", SPF: "orange" };
+import { UploadOutlined } from "@ant-design/icons";
+import { toast } from "sonner";
+import { 
+  useGetAllProductsQuery, 
+  useAddProductMutation, 
+  useUpdateProductMutation, 
+  useDeleteProductMutation 
+} from "../../redux/features/product/productApi";
 
 export default function Products() {
-  const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -59,31 +21,41 @@ export default function Products() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [fileList, setFileList] = useState([]);
 
-  const filtered = products.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase());
-    const matchType = filterType === "All" || p.type === filterType;
-    const matchStatus = filterStatus === "All" || p.status === filterStatus;
-    return matchSearch && matchType && matchStatus;
+  const { data, isLoading } = useGetAllProductsQuery({
+    search,
+    condition: filterStatus !== "All" ? filterStatus : undefined,
+    category: filterType !== "All" ? filterType : undefined,
+    limit: 50,
+    offset: 0
   });
 
+  const products = data?.items || [];
+
+  const [addProduct] = useAddProductMutation();
+  const [updateProduct] = useUpdateProductMutation();
+  const [deleteProduct] = useDeleteProductMutation();
+
   const handleAdd = () => {
-    form.validateFields().then((vals) => {
-      const newProduct = {
-        id: Date.now(),
-        name: vals.name,
-        brand: vals.brand,
-        type: vals.type,
-        ingredients: vals.ingredients
-          ? vals.ingredients.split(",").map((i) => i.trim())
-          : [],
-        status: vals.status || "Active",
-      };
-      setProducts([...products, newProduct]);
-      form.resetFields();
-      setModalOpen(false);
+    form.validateFields().then(async (vals) => {
+      const formData = new FormData();
+      formData.append("name", vals.name);
+      formData.append("categories", vals.categories);
+      formData.append("detected_conditions", vals.detected_conditions);
+      if (fileList[0]?.originFileObj) {
+        formData.append("file", fileList[0].originFileObj);
+      }
+
+      try {
+        const res = await addProduct(formData).unwrap();
+        toast.success("Product added successfully");
+        form.resetFields();
+        setFileList([]);
+        setModalOpen(false);
+      } catch (error) {
+        toast.error("Failed to add product");
+      }
     });
   };
 
@@ -91,40 +63,43 @@ export default function Products() {
     setEditingProduct(record);
     editForm.setFieldsValue({
       name: record.name,
-      brand: record.brand,
-      type: record.type,
-      ingredients: record.ingredients.join(", "),
-      status: record.status,
+      categories: record.categories?.join(", "),
+      detected_conditions: record.detected_conditions?.join(", "),
     });
+    setFileList([]);
     setEditModal(true);
   };
 
   const handleUpdate = () => {
-    editForm.validateFields().then((vals) => {
-      setProducts(
-        products.map((p) =>
-          p.id === editingProduct.id
-            ? {
-                ...p,
-                name: vals.name,
-                brand: vals.brand,
-                type: vals.type,
-                ingredients: vals.ingredients
-                  ? vals.ingredients.split(",").map((i) => i.trim())
-                  : [],
-                status: vals.status || p.status,
-              }
-            : p
-        )
-      );
-      editForm.resetFields();
-      setEditModal(false);
-      setEditingProduct(null);
+    editForm.validateFields().then(async (vals) => {
+      const formData = new FormData();
+      formData.append("name", vals.name);
+      formData.append("categories", vals.categories);
+      formData.append("detected_conditions", vals.detected_conditions);
+      if (fileList[0]?.originFileObj) {
+        formData.append("file", fileList[0].originFileObj);
+      }
+
+      try {
+        await updateProduct({ id: editingProduct.id, formdata: formData }).unwrap();
+        toast.success("Product updated successfully");
+        editForm.resetFields();
+        setFileList([]);
+        setEditModal(false);
+        setEditingProduct(null);
+      } catch (error) {
+        toast.error("Failed to update product");
+      }
     });
   };
 
-  const handleDelete = (id) => {
-    setProducts(products.filter((p) => p.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await deleteProduct(id).unwrap();
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete product");
+    }
     setDeleteConfirm(null);
   };
 
@@ -135,61 +110,51 @@ export default function Products() {
       ),
       dataIndex: "name",
       render: (text, row) => (
-        <div>
-          <p className="text-sm font-semibold text-[#2d2416]">{text}</p>
-          <p className="text-xs text-[#9a8a77]">ID: {row.id}</p>
+        <div className="flex items-center gap-3">
+          {row.image_url ? (
+            <img src={row.image_url} alt={text} className="w-10 h-10 rounded-full object-cover" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-200" />
+          )}
+          <div>
+            <p className="text-sm font-semibold text-[#2d2416]">{text}</p>
+            <p className="text-xs text-[#9a8a77]">ID: {row.id?.substring(0,8)}</p>
+          </div>
         </div>
       ),
     },
     {
-      title: <span className="text-xs text-[#9a8a77] font-medium">Brand</span>,
-      dataIndex: "brand",
-      render: (text) => <span className="text-sm text-[#5c4a32]">{text}</span>,
-    },
-    {
-      title: <span className="text-xs text-[#9a8a77] font-medium">Type</span>,
-      dataIndex: "type",
-      render: (type) => (
-        <Tag
-          color={typeColors[type] || "default"}
-          className="!rounded-full !text-xs"
-        >
-          {type}
-        </Tag>
+      title: <span className="text-xs text-[#9a8a77] font-medium">Categories</span>,
+      dataIndex: "categories",
+      render: (cats) => (
+        <div className="flex flex-wrap gap-1">
+          {cats?.map((type, i) => (
+            <Tag
+              key={i}
+              color="blue"
+              className="!rounded-full !text-xs"
+            >
+              {type}
+            </Tag>
+          ))}
+        </div>
       ),
     },
     {
       title: (
         <span className="text-xs text-[#9a8a77] font-medium">
-          Key Ingredients
+          Detected Conditions
         </span>
       ),
-      dataIndex: "ingredients",
-      render: (ings) => (
+      dataIndex: "detected_conditions",
+      render: (conds) => (
         <div className="flex flex-wrap gap-1">
-          {ings.slice(0, 2).map((ing, i) => (
-            <Tag
-              key={i}
-              className="!bg-[#f5f0eb] !border-none !text-[#5c4a32] !rounded-full !text-xs"
-            >
-              {ing}
+          {conds?.map((c, i) => (
+            <Tag key={i} color="orange" className="!rounded-full !text-xs">
+              {c}
             </Tag>
           ))}
-          {ings.length > 2 && (
-            <Tag className="!bg-[#f5f0eb] !border-none !text-[#9a8a77] !rounded-full !text-xs">
-              +{ings.length - 2}
-            </Tag>
-          )}
         </div>
-      ),
-    },
-    {
-      title: <span className="text-xs text-[#9a8a77] font-medium">Status</span>,
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={status === "Active" ? "green" : "red"} className="!rounded-full !text-xs">
-          {status}
-        </Tag>
       ),
     },
     {
@@ -239,7 +204,7 @@ export default function Products() {
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 p-4 border-b border-[#f0ebe4] flex-wrap">
           <Input
-            placeholder="Search products by name, brand, or ingredient..."
+            placeholder="Search products by name..."
             prefix={<FiSearch className="text-[#9a8a77]" />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -250,12 +215,12 @@ export default function Products() {
             onChange={setFilterType}
             className="w-36"
             options={[
-              { value: "All", label: "All Types" },
-              { value: "Serum", label: "Serum" },
-              { value: "Moisturizer", label: "Moisturizer" },
-              { value: "Toner", label: "Toner" },
-              { value: "Cleanser", label: "Cleanser" },
-              { value: "SPF", label: "SPF" },
+              { value: "All", label: "All Categories" },
+              { value: "skincare", label: "Skincare" },
+              { value: "face_moisturizer", label: "Moisturizer" },
+              { value: "face_wash", label: "Face Wash" },
+              { value: "serum", label: "Serum" },
+              { value: "non_food_products", label: "Non Food" },
             ]}
           />
           <Select
@@ -263,20 +228,21 @@ export default function Products() {
             onChange={setFilterStatus}
             className="w-36"
             options={[
-              { value: "All", label: "All Status" },
-              { value: "Active", label: "Active" },
-              { value: "Inactive", label: "Inactive" },
+              { value: "All", label: "All Conditions" },
+              { value: "oiliness", label: "Oiliness" },
+              { value: "dryness", label: "Dryness" },
+              { value: "dullness", label: "Dullness" },
             ]}
           />
         </div>
 
         <Table
-          dataSource={filtered}
+          dataSource={products}
+          loading={isLoading}
           columns={columns}
           rowKey="id"
           pagination={{
-            pageSize: 5,
-            showTotal: (total) => `Showing 1-5 of ${total} products`,
+            pageSize: 50,
           }}
           className="waxi-table"
           size="middle"
@@ -292,6 +258,7 @@ export default function Products() {
         onCancel={() => {
           setModalOpen(false);
           form.resetFields();
+          setFileList([]);
         }}
         onOk={handleAdd}
         okText="Add Product"
@@ -312,25 +279,35 @@ export default function Products() {
           >
             <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
           </Form.Item>
-          <Form.Item name="brand" label="Brand" rules={[{ required: true }]}>
-            <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
-          </Form.Item>
-          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-            <Select
-              className="w-full"
-              options={["Serum", "Moisturizer", "Toner", "Cleanser", "SPF"].map(
-                (v) => ({ value: v, label: v }),
-              )}
-            />
-          </Form.Item>
+          
           <Form.Item
-            name="ingredients"
-            label="Key Ingredients (comma separated)"
+            name="categories"
+            label="Categories (comma separated)"
+            rules={[{ required: true }]}
           >
             <Input
               className="!rounded-xl !bg-[#f5f0eb] !border-none"
-              placeholder="e.g. Niacinamide, Ceramides"
+              placeholder="e.g. skincare, face_wash"
             />
+          </Form.Item>
+          <Form.Item
+            name="detected_conditions"
+            label="Detected Conditions (comma separated)"
+          >
+            <Input
+              className="!rounded-xl !bg-[#f5f0eb] !border-none"
+              placeholder="e.g. oiliness, dryness"
+            />
+          </Form.Item>
+          <Form.Item label="Product Image">
+            <Upload
+              beforeUpload={() => false}
+              maxCount={1}
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+            >
+              <Button icon={<UploadOutlined />}>Select File</Button>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>
@@ -344,6 +321,7 @@ export default function Products() {
         onCancel={() => {
           setEditModal(false);
           editForm.resetFields();
+          setFileList([]);
           setEditingProduct(null);
         }}
         onOk={handleUpdate}
@@ -365,34 +343,35 @@ export default function Products() {
           >
             <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
           </Form.Item>
-          <Form.Item name="brand" label="Brand" rules={[{ required: true }]}>
-            <Input className="!rounded-xl !bg-[#f5f0eb] !border-none" />
-          </Form.Item>
-          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-            <Select
-              className="w-full"
-              options={["Serum", "Moisturizer", "Toner", "Cleanser", "SPF"].map(
-                (v) => ({ value: v, label: v }),
-              )}
-            />
-          </Form.Item>
+          
           <Form.Item
-            name="ingredients"
-            label="Key Ingredients (comma separated)"
+            name="categories"
+            label="Categories (comma separated)"
+            rules={[{ required: true }]}
           >
             <Input
               className="!rounded-xl !bg-[#f5f0eb] !border-none"
-              placeholder="e.g. Niacinamide, Ceramides"
+              placeholder="e.g. skincare, face_wash"
             />
           </Form.Item>
-          <Form.Item name="status" label="Status">
-            <Select
-              className="w-full"
-              options={[
-                { value: "Active", label: "Active" },
-                { value: "Inactive", label: "Inactive" },
-              ]}
+          <Form.Item
+            name="detected_conditions"
+            label="Detected Conditions (comma separated)"
+          >
+            <Input
+              className="!rounded-xl !bg-[#f5f0eb] !border-none"
+              placeholder="e.g. oiliness, dryness"
             />
+          </Form.Item>
+          <Form.Item label="Product Image">
+            <Upload
+              beforeUpload={() => false}
+              maxCount={1}
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+            >
+              <Button icon={<UploadOutlined />}>Select File (Leave empty to keep existing)</Button>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>
@@ -428,7 +407,7 @@ export default function Products() {
               Cancel
             </button>
             <button
-              onClick={() => handleDelete(deleteConfirm.id)}
+              onClick={() => handleDelete(deleteConfirm?.id)}
               className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition-colors"
             >
               Yes, Delete

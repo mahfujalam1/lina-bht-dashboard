@@ -1,4 +1,4 @@
-import { Switch, Tag } from "antd";
+import { Switch } from "antd";
 import { FiClock } from "react-icons/fi";
 
 const tagColorMap = {
@@ -7,9 +7,27 @@ const tagColorMap = {
   wellness: { color: "#4a7a5a", bg: "#dff0e5" },
 };
 
+const formatTime = (timeStr) => {
+  if (!timeStr) return "";
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour.toString().padStart(2, "0")}:${m} ${ampm}`;
+};
+
+const dayLabels = {
+  sun: "Sunday", mon: "Monday", tue: "Tuesday",
+  wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday",
+};
+
 export default function ReminderItem({ reminder, onToggle }) {
-  const { id, label, tag, defaultTime, enabled } = reminder;
-  const tagStyle = tagColorMap[tag] || { color: "#666", bg: "#eee" };
+  const { id, title, category, schedule, enabled } = reminder;
+  const tagStyle = tagColorMap[category] || { color: "#666", bg: "#eee" };
+
+  const defaultTime = schedule?.type === "weekly" && schedule?.day_of_week
+    ? `${dayLabels[schedule.day_of_week] || ""} ${formatTime(schedule.time)}`.trim()
+    : formatTime(schedule?.time);
 
   return (
     <div className="flex items-center justify-between px-4 py-4 bg-[#faf8f5] rounded-xl border border-[#ede6db]">
@@ -21,13 +39,13 @@ export default function ReminderItem({ reminder, onToggle }) {
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-semibold text-[#2d2416]">
-              {label}
+              {title}
             </span>
             <span
               className="text-xs font-medium px-2 py-0.5 rounded-full"
               style={{ color: tagStyle.color, backgroundColor: tagStyle.bg }}
             >
-              {tag}
+              {category}
             </span>
           </div>
           <p className="text-xs text-[#9a8a78]">

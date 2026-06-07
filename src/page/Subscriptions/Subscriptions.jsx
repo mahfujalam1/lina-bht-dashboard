@@ -7,8 +7,10 @@ import {
   FiCreditCard,
 } from "react-icons/fi";
 import { FaCheck } from "react-icons/fa";
+import { useGetSubscriptionOverviewQuery } from "../../redux/features/subscriptions/subscriptionsApi";
 
 export default function Subscriptions() {
+  const { data: overviewData, isLoading } = useGetSubscriptionOverviewQuery();
   const [premiumModal, setPremiumModal] = useState(false);
   const [basicModal, setBasicModal] = useState(false);
   const [form] = Form.useForm();
@@ -26,11 +28,22 @@ export default function Subscriptions() {
         </div>
         <Button
           icon={<FiCreditCard />}
+          onClick={() => {
+            if (overviewData?.rc_dashboard_url) {
+              window.open(overviewData.rc_dashboard_url, "_blank");
+            }
+          }}
           className="flex items-center gap-2 !bg-[#f5f0eb] !border-[#e3d9cc] !rounded-xl !h-10 !px-5 !font-medium !text-[#5c4a32]"
         >
-          Stripe Dashboard
+          RevenueCat Dashboard
         </Button>
       </div>
+
+      {overviewData?.revenue_note && (
+        <div className="mb-4 text-xs text-[#9a8a77] italic bg-[#f5f0eb] p-3 rounded-lg">
+          {overviewData.revenue_note}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="flex gap-5 mb-6 flex-wrap">
@@ -41,9 +54,14 @@ export default function Subscriptions() {
               Monthly Recurring Revenue
             </span>
           </div>
-          <p className="text-3xl font-bold text-[#2d2416]">$114,600</p>
-          <p className="text-xs text-green-500 font-semibold mt-1">
-            +15.2% from last month
+          <p className="text-3xl font-bold text-[#2d2416]">
+            {isLoading ? "..." : `$${(overviewData?.mrr?.value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          </p>
+          <p className={`text-xs font-semibold mt-1 ${
+            overviewData?.mrr?.direction === 'up' ? 'text-green-500' : 
+            overviewData?.mrr?.direction === 'down' ? 'text-red-500' : 'text-gray-500'
+          }`}>
+            {overviewData?.mrr?.change_pct !== null ? `${overviewData?.mrr?.change_pct > 0 ? '+' : ''}${overviewData?.mrr?.change_pct}%` : '0%'} from last month
           </p>
         </div>
         <div className="bg-white rounded-2xl p-5 flex-1 min-w-[160px] shadow-sm">
@@ -51,9 +69,14 @@ export default function Subscriptions() {
             <FiUsers className="text-[#8b9e7a]" size={16} />
             <span className="text-sm text-[#9a8a77]">Active Subscribers</span>
           </div>
-          <p className="text-3xl font-bold text-[#2d2416]">3,820</p>
-          <p className="text-xs text-green-500 font-semibold mt-1">
-            +8.4% from last month
+          <p className="text-3xl font-bold text-[#2d2416]">
+            {isLoading ? "..." : (overviewData?.active_subscribers?.value || 0).toLocaleString()}
+          </p>
+          <p className={`text-xs font-semibold mt-1 ${
+            overviewData?.active_subscribers?.direction === 'up' ? 'text-green-500' : 
+            overviewData?.active_subscribers?.direction === 'down' ? 'text-red-500' : 'text-gray-500'
+          }`}>
+            {overviewData?.active_subscribers?.change_pct !== null ? `${overviewData?.active_subscribers?.change_pct > 0 ? '+' : ''}${overviewData?.active_subscribers?.change_pct}%` : '0%'} from last month
           </p>
         </div>
         <div className="bg-white rounded-2xl p-5 flex-1 min-w-[160px] shadow-sm">
@@ -61,9 +84,14 @@ export default function Subscriptions() {
             <FiAlertCircle className="text-amber-500" size={16} />
             <span className="text-sm text-[#9a8a77]">Churn Rate</span>
           </div>
-          <p className="text-3xl font-bold text-[#2d2416]">2.4%</p>
-          <p className="text-xs text-amber-500 font-semibold mt-1">
-            +0.2% from last month
+          <p className="text-3xl font-bold text-[#2d2416]">
+            {isLoading ? "..." : `${(overviewData?.churn_rate?.value || 0)}%`}
+          </p>
+          <p className={`text-xs font-semibold mt-1 ${
+            overviewData?.churn_rate?.direction === 'up' ? 'text-red-500' : 
+            overviewData?.churn_rate?.direction === 'down' ? 'text-green-500' : 'text-gray-500'
+          }`}>
+            {overviewData?.churn_rate?.change_pct !== null ? `${overviewData?.churn_rate?.change_pct > 0 ? '+' : ''}${overviewData?.churn_rate?.change_pct}%` : '0%'} from last month
           </p>
         </div>
       </div>

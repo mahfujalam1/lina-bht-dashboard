@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Card, Input, Button, Avatar, Form } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import {
-  useChangePasswordMutation,
-  useUdpateMyProfileMutation,
-} from "../../../redux/features/user/userApi";
-import { useGetMyProfileQuery } from "../../../redux/features/auth/authApi";
 import { toast } from "sonner";
+import { useChangePasswordMutation, useGetMyProfileQuery } from "../../../redux/features/auth/authApi";
+import { useUdpateMyProfileMutation } from "../../../redux/features/user/userApi";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("editProfile");
@@ -205,21 +202,19 @@ export default function ProfilePage() {
           <div className="mt-6 flex gap-8 border-b border-gray-200">
             <button
               onClick={() => setActiveTab("editProfile")}
-              className={`pb-2 text-sm font-medium transition-colors ${
-                activeTab === "editProfile"
+              className={`pb-2 text-sm font-medium transition-colors ${activeTab === "editProfile"
                   ? "border-b-2 border-black text-black"
                   : "text-gray-500 hover:text-black"
-              }`}
+                }`}
             >
               Edit Profile
             </button>
             <button
               onClick={() => setActiveTab("changePassword")}
-              className={`pb-2 text-sm font-medium transition-colors ${
-                activeTab === "changePassword"
+              className={`pb-2 text-sm font-medium transition-colors ${activeTab === "changePassword"
                   ? "border-b-2 border-black text-black"
                   : "text-gray-500 hover:text-black"
-              }`}
+                }`}
             >
               Change Password
             </button>

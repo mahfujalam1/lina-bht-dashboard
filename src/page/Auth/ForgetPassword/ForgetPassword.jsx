@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForgotPasswordMutation } from "../../../redux/features/user/userApi";
 import AuthHeader from "../../../shared/AuthHeader";
+import { toast } from "sonner";
+import { useForgotPasswordMutation } from "../../../redux/features/auth/authApi";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -16,8 +17,13 @@ const ForgotPassword = () => {
       return;
     }
     const res = await forgotPassword({ email: email });
-    console.log(res);
-    localStorage.setItem("forgot-token", res?.data?.data?.token)
+    if (res?.error) {
+      const errMsg = res?.error?.data?.detail?.msg || "Failed to send reset code";
+      toast.error(errMsg);
+      return;
+    }
+    // success path
+    localStorage.setItem("email", email);
     console.log("Email Sent:", email);
     navigate(`/auth/otp/${encodeURIComponent(email)}`);
   };

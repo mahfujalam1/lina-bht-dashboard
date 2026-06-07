@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { useResetPasswordMutation } from "../../../redux/features/user/userApi";
 import AuthHeader from "../../../shared/AuthHeader";
+import { useResetPasswordMutation } from "../../../redux/features/auth/authApi";
 
 const NewPassword = () => {
   const navigate = useNavigate();
@@ -27,21 +27,26 @@ const NewPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const forgotToken = localStorage.getItem("forgot-token");
+    const email = localStorage.getItem("email");
+    const otp = localStorage.getItem("otp")
 
     if (passwords.new !== passwords.confirm) {
       setError("New password and confirm password do not match!");
       return;
     }
-
     const res = await resetPassword({
-      token: forgotToken,
-      newPassword: passwords.new,
+      email: email,
+      otp: otp,
+      new_password: passwords.new,
     });
     console.log(res?.data?.success);
     if (res?.data?.success) {
       localStorage.removeItem("forgot-token");
       navigate("/auth");
+    } else if (res?.error) {
+      // Show error toast with message from API response
+      const errMsg = res?.error?.data?.detail?.msg || "Password reset failed";
+      toast.error(errMsg);
     }
   };
 

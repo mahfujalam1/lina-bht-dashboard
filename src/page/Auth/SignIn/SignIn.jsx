@@ -6,38 +6,42 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import AuthHeader from "../../../shared/AuthHeader";
+import { useLoginMutation } from "../../../redux/features/auth/authApi";
+import Cookies from "js-cookie";
+import { toast } from "sonner";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     // form data collect
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
-    console.log("Mock login data:", data);
-    localStorage.setItem("token", "dummy-token-123");
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name: "Demo User",
-        email: data.email,
-      }),
-    );
-
-    // fake delay (optional, looks realistic)
-    setTimeout(() => {
-      // fake token & user save
-      setIsLoading(false);
-      navigate("/");
-    }, 800);
+    try {
+      const response = await login(data).unwrap();
+      console.log("response", response);
+      if (response?.access_token) {
+        localStorage.setItem("token", response.access_token);
+        Cookies.set('refresh_token', response.refresh_token)
+        // Store user info for AdminRoutes guard
+        const userInfo = {
+          email: response?.admin.email,
+          name: response?.admin.full_name || "Demo User",
+        };
+        localStorage.setItem("user", JSON.stringify(userInfo));
+        toast.success("Login successful!");
+        setTimeout(() => navigate("/"), 150);
+      }
+    } catch (error) {
+      toast.error(error?.data?.message || "Login failed");
+    }
   };
 
   return (
@@ -109,9 +113,8 @@ const SignIn = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex items-center justify-center gap-2 primary-bg text-white py-2 rounded-md font-semibold transition-all ${
-                isLoading ? "opacity-80 cursor-not-allowed" : ""
-              }`}
+              className={`w-full flex items-center justify-center gap-2 primary-bg text-white py-2 rounded-md font-semibold transition-all ${isLoading ? "opacity-80 cursor-not-allowed" : ""
+                }`}
             >
               {isLoading ? (
                 <>
