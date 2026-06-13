@@ -5,7 +5,7 @@ export const baseApi = createApi({
   reducerPath: "CarmeloApi",
   baseQuery: fetchBaseQuery({
     // baseUrl: "https://skinsense.duckdns.org",
-    baseUrl: "http://10.10.20.46:8000",
+    baseUrl: "http://10.10.20.46:8001",
     prepareHeaders: (headers) => {
       // Retrieve the token from your store or local storage
       const token = localStorage.getItem("token");

@@ -18,6 +18,9 @@ export const tagTypes = {
   aiConfig: "AiConfig",
   notification: "Notification",
   notificationHistory: "NotificationHistory",
+  nutrition: "Nutrition",
+  food: "Food",
+  recipe: "Recipe",
 };
 
 export const tagTypesList = [
@@ -40,4 +43,7 @@ export const tagTypesList = [
   tagTypes.aiConfig,
   tagTypes.notification,
   tagTypes.notificationHistory,
+  tagTypes.nutrition,
+  tagTypes.food,
+  tagTypes.recipe,
 ];

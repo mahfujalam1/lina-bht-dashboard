@@ -26,10 +26,6 @@ const Settings = () => {
     //   path: "personal-info",
     // },
     {
-      title: "Change password",
-      path: "change-password",
-    },
-    {
       title: "Privacy Policy",
       path: "privacy-policy",
     },

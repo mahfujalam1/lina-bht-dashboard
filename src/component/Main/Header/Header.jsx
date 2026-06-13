@@ -5,9 +5,12 @@ import { FiMenu } from "react-icons/fi";
 // import { useSelector } from "react-redux";
 // import { imageBaseUrl } from "../../../config/imageBaseUrl";
 import { RiNotificationFill } from "react-icons/ri";
+import { useMeQuery } from "../../../redux/features/auth/authApi";
 
 const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const {data} = useMeQuery()
+  console.log("data", data);
   // const { user } = useSelector((state) => state.auth);
 
   return (

@@ -1,26 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { Card, Input, Button, Avatar, Form } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { Card, Input, Button, Avatar, Form, Upload } from "antd";
+import { EyeInvisibleOutlined, EyeTwoTone, CameraOutlined } from "@ant-design/icons";
 import { toast } from "sonner";
-import { useChangePasswordMutation, useGetMyProfileQuery } from "../../../redux/features/auth/authApi";
+import { useChangePasswordMutation, useMeQuery } from "../../../redux/features/auth/authApi";
 import { useUdpateMyProfileMutation } from "../../../redux/features/user/userApi";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("editProfile");
-  const { data } = useGetMyProfileQuery();
-  const [updateProfile] = useUdpateMyProfileMutation();
+  const [imageFile, setImageFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const { data } = useMeQuery();
   const [changePassword] = useChangePasswordMutation();
-  const userData = data?.data;
-  localStorage.setItem("user", userData);
+  const [updateProfile] = useUdpateMyProfileMutation();
+  const userData = data?.admin;
+  if (userData) {
+    localStorage.setItem("user", JSON.stringify(userData));
+  }
   const [form] = Form.useForm();
+
+  const handleImageChange = (info) => {
+    // If using dummy upload (beforeUpload={() => false}), info.file is the file itself.
+    const file = info.file;
+    if (file) {
+      setImageFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
 
   useEffect(() => {
     if (userData) {
       form.setFieldsValue({
-        fullName: userData?.fullName,
-        email: userData?.email, // Email is set but will not be submitted
-        address: userData?.address,
-        phone: userData?.phone,
+        full_name: userData?.full_name,
       });
     }
   }, [userData, form]);
@@ -30,11 +40,23 @@ export default function ProfilePage() {
     try {
       // Remove email from values before sending to the API
       const { email, ...profileData } = values;
+
+      const formData = new FormData();
+      Object.keys(profileData).forEach(key => {
+        if (profileData[key]) {
+          formData.append(key, profileData[key]);
+        }
+      });
+
+      if (imageFile) {
+        formData.append("avatar", imageFile); // Assumed backend expects "image". Change if necessary.
+      }
+
       // Call API with updated data excluding email
-      const res = await updateProfile(profileData).unwrap();
-      toast.success(res.message); // Show success message
+      const res = await updateProfile(formData).unwrap();
+      toast.success(res?.message || "Profile updated successfully"); // Show success message
     } catch (error) {
-      toast.error("Failed to update profile"); // Show error message
+      toast.error(error?.data?.message || "Failed to update profile"); // Show error message
     }
   };
 
@@ -46,7 +68,7 @@ export default function ProfilePage() {
       return;
     }
     try {
-      await changePassword({ previousPassword, newPassword }).unwrap();
+      await changePassword({ current_password: previousPassword, new_password: newPassword }).unwrap();
       toast.success("Password changed successfully"); // Show success message
     } catch (error) {
       toast.error("Failed to change password"); // Show error message
@@ -68,34 +90,13 @@ export default function ProfilePage() {
               onFinish={handleUpdateProfile}
             >
               <Form.Item
-                name="fullName"
+                name="full_name"
                 label="Full Name"
                 rules={[
                   { required: true, message: "Please enter your full name" },
                 ]}
               >
                 <Input placeholder="User Name" size="large" />
-              </Form.Item>
-              <Form.Item name="email" label="Email">
-                <Input placeholder="Enter your email" readOnly size="large" />
-              </Form.Item>
-              <Form.Item
-                name="phone"
-                label="Phone"
-                rules={[
-                  { required: true, message: "Please enter your phone number" },
-                ]}
-              >
-                <Input placeholder="Contact No" size="large" />
-              </Form.Item>
-              <Form.Item
-                name="address"
-                label="Address"
-                rules={[
-                  { required: true, message: "Please enter your address" },
-                ]}
-              >
-                <Input placeholder="Enter your address" size="large" />
               </Form.Item>
               <Form.Item>
                 <Button
@@ -104,7 +105,7 @@ export default function ProfilePage() {
                   block
                   className="bg-color"
                 >
-                  Save & Change
+                  Save & Update
                 </Button>
               </Form.Item>
             </Form>
@@ -191,20 +192,30 @@ export default function ProfilePage() {
     <div className="flex justify-center py-10">
       <Card className="w-full max-w-2xl p-8 border-none shadow-none">
         <div className="flex flex-col items-center">
-          <Avatar
-            size={100}
-            src={userData?.avatar || "https://i.pravatar.cc/150?img=3"}
-          />
-          <h2 className="mt-3 text-xl font-semibold">{userData?.fullName}</h2>
-          <p className="text-gray-500 text-sm">@{userData?.role}</p>
+          <Upload
+            showUploadList={false}
+            beforeUpload={() => false}
+            onChange={handleImageChange}
+          >
+            <div className="relative cursor-pointer group">
+              <Avatar
+                size={100}
+                src={previewImage || userData?.avatar_url || userData?.image || "https://i.pravatar.cc/150?img=3"}
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <CameraOutlined className="text-white text-2xl" />
+              </div>
+            </div>
+          </Upload>
+          <h2 className="mt-3 text-xl font-semibold">{userData?.full_name}</h2>
 
           {/* Tabs below image */}
           <div className="mt-6 flex gap-8 border-b border-gray-200">
             <button
               onClick={() => setActiveTab("editProfile")}
               className={`pb-2 text-sm font-medium transition-colors ${activeTab === "editProfile"
-                  ? "border-b-2 border-black text-black"
-                  : "text-gray-500 hover:text-black"
+                ? "border-b-2 border-black text-black"
+                : "text-gray-500 hover:text-black"
                 }`}
             >
               Edit Profile
@@ -212,8 +223,8 @@ export default function ProfilePage() {
             <button
               onClick={() => setActiveTab("changePassword")}
               className={`pb-2 text-sm font-medium transition-colors ${activeTab === "changePassword"
-                  ? "border-b-2 border-black text-black"
-                  : "text-gray-500 hover:text-black"
+                ? "border-b-2 border-black text-black"
+                : "text-gray-500 hover:text-black"
                 }`}
             >
               Change Password

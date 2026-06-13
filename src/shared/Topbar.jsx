@@ -180,12 +180,12 @@ export default function Topbar({ onToggleSidebar }) {
             </p>
             <p className="text-xs text-[#9a8a77]">{meData?.admin?.email}</p>
           </div>
-          <Avatar
-            style={{ backgroundColor: "#8b9e7a", color: "#fff", fontWeight: 600 }}
-            size={38}
-          >
-            SA
-          </Avatar>
+          <div className="relative cursor-pointer group">
+            <Avatar
+              size={40}
+              src={meData?.admin?.avatar_url || "https://i.pravatar.cc/150?img=3"}
+            />
+          </div>
         </div>
       </div>
     </div>

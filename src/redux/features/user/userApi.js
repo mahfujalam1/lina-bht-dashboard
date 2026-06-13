@@ -40,8 +40,8 @@ const userApi = baseApi.injectEndpoints({
       query: (data) => {
         console.log("from apis", data);
         return {
-          url: "/users",
-          method: "PATCH",
+          url: "/admin/profile/me",
+          method: "PUT",
           body: data,
         };
       },

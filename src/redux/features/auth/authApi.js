@@ -41,7 +41,10 @@ const authApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: "/admin/auth/change-password",
         method: "POST",
-        body: data,
+        body: {
+          current_password: data.previousPassword,
+          new_password: data.newPassword,
+        },
       }),
     }),
     refresh: builder.mutation({
@@ -63,14 +66,6 @@ const authApi = baseApi.injectEndpoints({
         url: "/admin/auth/me",
         method: "GET",
       }),
-    }),
-    getMyProfile: builder.query({
-      query: (data) => ({
-        url: "/auth/me",
-        method: "GET",
-        body: data,
-      }),
-      providesTags: [tagTypes.users],
     }),
     logout: builder.mutation({
       query: () => ({

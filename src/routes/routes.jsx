@@ -24,6 +24,7 @@ import EducationalContent from "../page/EducationalContent/EducationalContent";
 import Subscriptions from "../page/Subscriptions/Subscriptions";
 import Analytics from "../page/Analytics/Analytics";
 import RemindersPage from "../page/Reminder/ReminderPage";
+import NutritionPage from "../page/Nutrition/NutritionPage";
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "products",
         element: <Products />,
+      },
+      {
+        path: "nutrition",
+        element: <NutritionPage />,
       },
       {
         path: "education",

@@ -9,6 +9,8 @@ import {
   FaBell,
   FaCog,
   FaSignOutAlt,
+  FaUser,
+  FaLeaf,
 } from "react-icons/fa";
 
 const navItems = [
@@ -19,6 +21,7 @@ const navItems = [
     path: "/ai-configuration",
   },
   { label: "Products DB", icon: <FaBoxOpen size={18} />, path: "/products" },
+  { label: "Nutrition", icon: <FaLeaf size={18} />, path: "/nutrition" },
   {
     label: "Education Content",
     icon: <FaBook size={18} />,
@@ -31,6 +34,7 @@ const navItems = [
   },
   { label: "Analytics", icon: <FaChartBar size={18} />, path: "/analytics" },
   { label: "Reminders", icon: <FaBell size={18} />, path: "/reminders" },
+  { label: "Profile", icon: <FaUser size={18} />, path: "/settings/profile" },
   { label: "Settings", icon: <FaCog size={18} />, path: "/settings" },
 ];
 
