@@ -32,6 +32,24 @@ const aiConfigApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["AiConfig"],
     }),
+    getLimits: builder.query({
+      query: () => ({ url: "/admin/limits", method: "GET" }),
+      providesTags: ["Limits"],
+    }),
+    updateEndpointLimit: builder.mutation({
+      query: ({ endpointId, ...body }) => ({
+        url: `/admin/limits/${endpointId}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Limits"],
+    }),
+    getEndpointUsage: builder.query({
+      query: (endpointId) => ({
+        url: `/admin/limits/${endpointId}/usage`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -40,4 +58,7 @@ export const {
   useSaveAiConfigMutation,
   useUpdateApiKeyMutation,
   useCheckModelUpdatesMutation,
+  useGetLimitsQuery,
+  useUpdateEndpointLimitMutation,
+  useGetEndpointUsageQuery,
 } = aiConfigApi;
