@@ -144,7 +144,7 @@ export default function Topbar({ onToggleSidebar }) {
                           <p className="text-[10px] text-[#b8a994] mt-1">
                             {formatTime(notif.created_at || notif.sent_at)}
                           </p>
-                        </div>
+                        </div> 
 
                         {/* Mark as read button */}
                         {!isRead && (
