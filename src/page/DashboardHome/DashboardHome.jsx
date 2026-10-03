@@ -54,7 +54,7 @@ export default function Dashboard() {
         Dashboard Overview
       </h1>
       <p className="text-sm text-[#9a8a77] mb-7">
-        Welcome back. Here's what's happening with Waxi today.
+        Welcome back. Here's what's happening with Gixy today.
       </p>
 
       {/* Stat Cards */}
