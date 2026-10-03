@@ -23,8 +23,7 @@ const ForgotPassword = () => {
       return;
     }
     // success path
-    localStorage.setItem("email", email);
-    console.log("Email Sent:", email);
+    sessionStorage.setItem("email", email);
     navigate(`/auth/otp/${encodeURIComponent(email)}`);
   };
 

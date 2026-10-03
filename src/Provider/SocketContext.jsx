@@ -30,9 +30,9 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    console.log("Connecting socket for user:", parseUser);
 
-    const socketBase = import.meta.env.VITE_SOCKET_URL || "http://10.10.20.44:3333";
+
+    const socketBase = import.meta.env.VITE_SOCKET_URL || "http://localhost:8090";
     const socketInstance = io(
       `${socketBase}?userId=${parseUser._id}`,
       {

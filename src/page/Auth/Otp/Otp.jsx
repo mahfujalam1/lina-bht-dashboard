@@ -34,14 +34,14 @@ const OtpVerify = () => {
 
   const handleVerify = async (e) => {
     e.preventDefault();
-    const email = localStorage.getItem("email");
+    const email = sessionStorage.getItem("email");
     const code = otp.join("");
     if (code.length === 6) {
       const res = verfyOTP({ email: email, otp: code });
       if (res.success) {
         localStorage.setItem("forgot-token", res?.data?.data?.token)
       }
-      localStorage.setItem('otp', code)
+      sessionStorage.setItem('otp', code)
       navigate(`/auth/new-password/${encodeURIComponent(email)}`);
     } else {
       toast.warning("Please enter all 6 digits!");

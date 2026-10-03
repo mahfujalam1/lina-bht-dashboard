@@ -27,8 +27,8 @@ const NewPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const email = localStorage.getItem("email");
-    const otp = localStorage.getItem("otp")
+    const email = sessionStorage.getItem("email");
+    const otp = sessionStorage.getItem("otp")
 
     if (passwords.new !== passwords.confirm) {
       setError("New password and confirm password do not match!");
@@ -39,9 +39,10 @@ const NewPassword = () => {
       otp: otp,
       new_password: passwords.new,
     });
-    console.log(res?.data?.success);
     if (res?.data?.success) {
       localStorage.removeItem("forgot-token");
+      sessionStorage.removeItem("otp");
+      sessionStorage.removeItem("email");
       navigate("/auth");
     } else if (res?.error) {
       // Show error toast with message from API response

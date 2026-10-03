@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import { Button, Select, Modal, Form, Input, Tag, Upload, message } from "antd";
 import { FaEdit, FaTrash, FaEye, FaPlus, FaVideo, FaCloudUploadAlt, FaExclamationTriangle } from "react-icons/fa";
 import { UploadOutlined } from "@ant-design/icons";
@@ -785,7 +786,7 @@ export default function EducationalContent() {
               {viewingItem.content && (
                 <div 
                   className="text-sm text-[#5c4a32] whitespace-pre-wrap leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: viewingItem.content }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(viewingItem.content) }}
                 />
               )}
             </div>
