@@ -1,12 +1,7 @@
 /* eslint-disable react/prop-types */
-import PersonalityToneCard from "./PersonalityToneCard";
 import AiArchitectureCard from "./AiArchitectureCard";
 
 export default function AiConfigTab({
-  tone,
-  setTone,
-  prompt,
-  setPrompt,
   configData,
   onCheckUpdates,
   isCheckingUpdates,
@@ -15,13 +10,7 @@ export default function AiConfigTab({
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <PersonalityToneCard
-        tone={tone}
-        setTone={setTone}
-        prompt={prompt}
-        setPrompt={setPrompt}
-      />
-
+      {/* Personality & Tone card is hidden as requested */}
       <AiArchitectureCard
         configData={configData}
         onCheckUpdates={onCheckUpdates}

@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
-import { Button, Spin } from "antd";
-import { FaSave } from "react-icons/fa";
+import { useState } from "react";
+import { Spin } from "antd";
 import { GiArtificialIntelligence } from "react-icons/gi";
 import { TbPlugConnected, TbChartBar } from "react-icons/tb";
 import { toast } from "sonner";
@@ -9,7 +8,6 @@ import {
   useCheckModelUpdatesMutation,
   useGetAiConfigQuery,
   useGetLimitsQuery,
-  useSaveAiConfigMutation,
   useUpdateEndpointLimitMutation,
 } from "../../redux/features/aiConfig/aiConfigApi";
 import AiConfigTab from "./components/AiConfigTab";
@@ -25,44 +23,17 @@ export default function AIConfiguration() {
   // Queries & Mutations
   const { data: configData, isLoading: isLoadingConfig } = useGetAiConfigQuery();
   const { data: limitsData, isLoading: isLoadingLimits } = useGetLimitsQuery();
-  const [saveAiConfig, { isLoading: isSaving }] = useSaveAiConfigMutation();
   const [updateEndpointLimit, { isLoading: isUpdatingLimit }] =
     useUpdateEndpointLimitMutation();
   const [checkModelUpdates, { isLoading: isCheckingUpdates }] =
     useCheckModelUpdatesMutation();
 
-  // Local state for AI config form
-  const [prompt, setPrompt] = useState("");
-  const [tone, setTone] = useState("Professional & Empathetic");
   const [checkUpdatesResult, setCheckUpdatesResult] = useState(null);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
 
   // Local state for limit editing
   const [editingLimit, setEditingLimit] = useState(null);
   const [limitForm, setLimitForm] = useState({});
-
-  useEffect(() => {
-    if (configData?.config) {
-      setPrompt(configData.config.system_prompt_override || "");
-      setTone(configData.config.tone || "Professional & Empathetic");
-    }
-  }, [configData]);
-
-  const handleSave = async () => {
-    try {
-      const config = configData?.config;
-      await saveAiConfig({
-        tone,
-        system_prompt_override: prompt,
-        openai_model: config?.architecture?.primary?.model,
-        anthropic_model: config?.architecture?.fallback?.model,
-        monthly_quota: configData?.api_usage?.monthly_quota,
-      }).unwrap();
-      toast.success("AI Configuration saved successfully!");
-    } catch (err) {
-      toast.error(err?.data?.detail || "Failed to save AI configuration");
-    }
-  };
 
   const handleCheckUpdates = async () => {
     try {
@@ -117,34 +88,24 @@ export default function AIConfiguration() {
       toast.success("Usage limits updated successfully!");
       setEditingLimit(null);
     } catch (error) {
-      toast.error(error?.data?.detail?.[0]?.msg || error?.data?.detail || "Failed to update limits");
+      toast.error(
+        error?.data?.detail?.[0]?.msg ||
+          error?.data?.detail ||
+          "Failed to update limits"
+      );
     }
   };
 
   return (
     <div className="flex flex-col gap-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#2d2416]">
-            AI &amp; Integrations
-          </h1>
-          <p className="text-sm text-[#9a8a77] mt-0.5">
-            Manage assistant behavior, diagnostic LLM engines, and third-party API integrations.
-          </p>
-        </div>
-
-        {activeTab === "ai" && (
-          <Button
-            type="primary"
-            icon={<FaSave />}
-            loading={isSaving}
-            onClick={handleSave}
-            className="flex items-center gap-2 !bg-[#2d2416] !border-[#2d2416] !rounded-xl !h-10 !px-5 !font-semibold self-start sm:self-auto"
-          >
-            Save Changes
-          </Button>
-        )}
+      <div>
+        <h1 className="text-2xl font-bold text-[#2d2416]">
+          AI &amp; Integrations
+        </h1>
+        <p className="text-sm text-[#9a8a77] mt-0.5">
+          Manage assistant behavior, diagnostic LLM engines, and third-party API integrations.
+        </p>
       </div>
 
       {/* Navigation Sub-Tabs */}
@@ -200,10 +161,6 @@ export default function AIConfiguration() {
           <div className="min-w-0 flex-1 w-full">
             {activeTab === "ai" && (
               <AiConfigTab
-                tone={tone}
-                setTone={setTone}
-                prompt={prompt}
-                setPrompt={setPrompt}
                 configData={configData}
                 onCheckUpdates={handleCheckUpdates}
                 isCheckingUpdates={isCheckingUpdates}
