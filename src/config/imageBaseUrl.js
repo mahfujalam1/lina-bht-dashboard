@@ -1,2 +1,1 @@
-export const imageBaseUrl = "https://api.budbox.fun"
-// export const imageBaseUrl = "http://192.168.10.169:8080"
+export const imageBaseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "https://api.budbox.fun";

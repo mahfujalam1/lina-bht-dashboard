@@ -32,8 +32,9 @@ export const SocketProvider = ({ children }) => {
 
     console.log("Connecting socket for user:", parseUser);
 
+    const socketBase = import.meta.env.VITE_SOCKET_URL || "http://10.10.20.44:3333";
     const socketInstance = io(
-      `http://10.10.20.44:3333?userId=${parseUser._id}`,
+      `${socketBase}?userId=${parseUser._id}`,
       {
         auth: {
           token: token,

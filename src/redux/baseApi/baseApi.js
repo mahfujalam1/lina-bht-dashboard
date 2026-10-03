@@ -4,8 +4,7 @@ import { tagTypesList } from "../tagTypes";
 export const baseApi = createApi({
   reducerPath: "CarmeloApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://skinsense.duckdns.org",
-    // baseUrl: "http://10.10.20.46:8001",
+    baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:8090",
     prepareHeaders: (headers) => {
       // Retrieve the token from your store or local storage
       const token = localStorage.getItem("token");
