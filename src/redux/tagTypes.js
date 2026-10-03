@@ -22,6 +22,7 @@ export const tagTypes = {
   nutrition: "Nutrition",
   food: "Food",
   recipe: "Recipe",
+  integrations: "Integrations",
 };
 
 export const tagTypesList = [
@@ -48,4 +49,5 @@ export const tagTypesList = [
   tagTypes.nutrition,
   tagTypes.food,
   tagTypes.recipe,
+  tagTypes.integrations,
 ];
