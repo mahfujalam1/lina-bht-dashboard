@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-import {Form, Modal, Switch } from "antd";
+import { Form, Modal, Switch, message } from "antd";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import OTPInput from "react-otp-input";
 // import { useSelector } from "react-redux";
@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import CustomInput from "../../../utils/CustomInput";
 import CustomButton from "../../../utils/CustomButton";
 import { useState } from "react";
+import { useChangePasswordMutation } from "../../../redux/features/auth/authApi";
 
 const Settings = () => {
   // const { user } = useSelector(state => state?.auth)
@@ -17,14 +18,16 @@ const Settings = () => {
   const [modelTitle, setModelTitle] = useState("");
   const [otp, setOtp] = useState("");
   const [form] = Form.useForm();
+  const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
+
   const onChange = (checked) => {
     console.log(`switch to ${checked}`);
   };
   const settingsItem = [
-    // {
-    //   title: "Personal Information",
-    //   path: "personal-info",
-    // },
+    {
+      title: "Change Password",
+      path: "change-password",
+    },
     {
       title: "Privacy Policy",
       path: "privacy-policy",
@@ -52,8 +55,17 @@ const Settings = () => {
   };
 
   const handleChangePassword = async (values) => {
-    return console.log(values);
-    // const { oldPassword, newPassword } = values;
+    try {
+      const res = await changePassword({
+        current_password: values.oldPassword,
+        new_password: values.newPassword,
+      }).unwrap();
+      message.success(res?.message || "Password changed successfully!");
+      setIsModalOpen(false);
+      form.resetFields();
+    } catch (err) {
+      message.error(err?.data?.detail || "Failed to change password. Please check your current password.");
+    }
   };
   const handleForgetPassword = async (values) => {
     forgotPassword(values);
@@ -172,7 +184,7 @@ const Settings = () => {
                 </button>
               </p>
               <Form.Item className="w-full">
-                <CustomButton className="w-full">Update Password</CustomButton>
+                <CustomButton loading={isChangingPassword} className="w-full">Update Password</CustomButton>
               </Form.Item>
             </Form>
           </div>

@@ -33,7 +33,7 @@ const SignIn = () => {
         // Store user info for AdminRoutes guard
         const userInfo = {
           email: response?.admin.email,
-          name: response?.admin.full_name || "Demo User",
+          name: response?.admin.full_name || response?.admin.email?.split("@")[0] || "Admin",
         };
         localStorage.setItem("user", JSON.stringify(userInfo));
         toast.success("Login successful!");

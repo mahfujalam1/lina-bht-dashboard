@@ -13,7 +13,6 @@ import PrivacyPolicyPage from "../page/PrivacyPolicy/PrivacyPolicyPage";
 import EditPrivacyPolicy from "../page/EditPrivacyPolicy/EditPrivacyPolicy";
 import TermsConditions from "../page/TermsConditions/TermsConditions";
 import EditTermsConditions from "../page/EditTermsConditions/EditTermsConditions";
-import UsersPage from "../page/Users/UsersPage";
 import ProfilePage from "../component/Main/Profile/ProfilePage";
 import AdminRoutes from "./AdminRoutes";
 import ErrorElement from "../component/errorElement/ErrorElement";
@@ -42,7 +41,7 @@ const router = createBrowserRouter([
       },
       {
         path: "users-management",
-        element: <UsersPage />,
+        element: <UserManagementMain />,
       },
       {
         path: "ai-configuration",

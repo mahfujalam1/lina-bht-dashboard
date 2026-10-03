@@ -10,6 +10,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaUser,
+  FaUsers,
   FaLeaf,
 } from "react-icons/fa";
 
@@ -33,6 +34,7 @@ const navItems = [
     path: "/subscriptions",
   },
   { label: "Analytics", icon: <FaChartBar size={18} />, path: "/analytics" },
+  { label: "Users", icon: <FaUsers size={18} />, path: "/users" },
   { label: "Reminders", icon: <FaBell size={18} />, path: "/reminders" },
   { label: "Profile", icon: <FaUser size={18} />, path: "/settings/profile" },
   { label: "Settings", icon: <FaCog size={18} />, path: "/settings" },
