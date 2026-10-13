@@ -15,11 +15,12 @@ const productApi = baseApi.injectEndpoints({
     }),
 
     getAllProducts: builder.query({
-      query: ({ search = "", condition = "", category = "", limit = 50, offset = 0 }) => {
+      query: ({ search = "", condition = "", category = "", price_tier = "", limit = 50, offset = 0 }) => {
         const queryParams = new URLSearchParams();
         if (search) queryParams.append("search", search);
         if (condition && condition !== "All") queryParams.append("condition", condition);
         if (category && category !== "All") queryParams.append("category", category);
+        if (price_tier && price_tier !== "All") queryParams.append("price_tier", price_tier);
         queryParams.append("limit", limit);
         queryParams.append("offset", offset);
 
